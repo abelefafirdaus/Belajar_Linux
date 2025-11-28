@@ -1,0 +1,829 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+{% block title %}Chapter 2 — Shell & Command Line | LinuxEdu{% endblock %}
+
+{% block head_extra %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+:root{
+  --accent: #ff8c42;
+  --accent-600: #ff7a18;
+  --muted: #6b6b6b;
+  --bg-start: #ffffff;
+  --bg-end: #fff8f2;
+  --card: #ffffff;
+  --radius: 14px;
+  --shadow-lg: 0 18px 50px rgba(15,15,15,0.06);
+  --shadow-sm: 0 6px 18px rgba(10,10,10,0.04);
+  --success: #28c06b;
+  --danger: #ff6b61;
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --transition: 260ms cubic-bezier(.2,.9,.2,1);
+}
+
+/* Reset & base */
+*{box-sizing:border-box}
+html,body{height:100%}
+body{
+  margin:0;
+  font-family:Inter, system-ui, -apple-system, "Segoe UI", Roboto, Arial;
+  color:#202020;
+  background: linear-gradient(180deg,var(--bg-start), var(--bg-end) 60%);
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+}
+
+/* Container */
+.container{
+  max-width:1180px;
+  margin:34px auto;
+  padding:18px;
+}
+
+/* Header */
+.header{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  gap:16px;
+}
+.brand{display:flex;gap:12px;align-items:center}
+.logo{
+  width:56px;height:56px;border-radius:12px;
+  background:linear-gradient(180deg,var(--accent),var(--accent-600));
+  color:#fff;font-weight:800;display:grid;place-items:center;font-size:1.15rem;
+  box-shadow:0 8px 30px rgba(255,140,66,0.16);
+}
+.h-title{margin:0;font-weight:800;color:var(--accent);font-size:1.05rem}
+.h-sub{margin:0;color:var(--muted);font-size:.95rem}
+
+/* Grid */
+.grid{
+  display:grid;
+  grid-template-columns: 1fr 360px;
+  gap:20px;
+  margin-top:18px;
+}
+@media (max-width:980px){ .grid{ grid-template-columns: 1fr; } }
+
+/* Card */
+.card{
+  background:var(--card);
+  border-radius:var(--radius);
+  padding:18px;
+  box-shadow:var(--shadow-sm);
+  border:1px solid rgba(0,0,0,0.03);
+  transition: transform var(--transition), box-shadow var(--transition);
+}
+.card:hover{ transform: translateY(-4px); box-shadow: var(--shadow-lg); }
+
+/* Terminal */
+.terminal{ border-radius:12px; overflow:hidden; border:1px solid rgba(0,0,0,0.04); }
+.term-head{
+  display:flex;align-items:center;justify-content:space-between;padding:10px 12px;
+  background: linear-gradient(90deg,var(--accent),var(--accent-600));
+  color:white;font-weight:700;border-radius:12px 12px 0 0;
+}
+.term-body{
+  background:#050505;color:#e9f7e9;padding:14px;font-family:var(--mono);min-height:480px;
+  display:flex;flex-direction:column;gap:10px;
+}
+
+/* CLI output */
+.cli-output{
+  flex:1;overflow:auto;padding-right:8px;white-space:pre-wrap;
+  scrollbar-width:thin; scrollbar-color: rgba(255,140,66,0.25) rgba(0,0,0,0.05);
+}
+.cli-line{
+  opacity:0; transform: translateY(6px);
+  transition: opacity 220ms ease, transform 220ms ease;
+  margin:6px 0;
+  line-height:1.45;
+}
+.cli-line.show{ opacity:1; transform:none; }
+.cli-line.user{ color:#ffd8b8; font-weight:700; }
+.cli-line.system{ color:#bff3b0; }
+
+/* Input */
+.input-row{ display:flex;gap:10px;align-items:center }
+.input-prefix{ min-width:110px;color:#fff;font-weight:700;opacity:.95 }
+.input{
+  flex:1;background:transparent;border:1px solid rgba(255,255,255,0.06);
+  color:#fff;padding:10px 12px;border-radius:10px;outline:none;font-family:var(--mono);
+}
+.input::placeholder{ color:rgba(255,255,255,0.72) }
+.input:focus{ box-shadow:0 8px 30px rgba(255,140,66,0.12) }
+
+/* Buttons */
+.btn{
+  padding:8px 12px;border-radius:10px;border:none;cursor:pointer;font-weight:800;
+  transition: transform 180ms ease, box-shadow 180ms ease;
+}
+.btn:active{ transform:translateY(1px) }
+.btn-primary{
+  background:linear-gradient(90deg,var(--accent),#ff9b66); color:#fff; box-shadow:0 10px 30px rgba(255,140,66,0.12);
+}
+.btn-ghost{
+  background:transparent;border:1px solid rgba(255,140,66,0.12);color:var(--accent);font-weight:700;
+}
+.btn-ghost:hover{ background:rgba(255,140,66,0.06); color:#fff; }
+
+/* Feedback */
+.feedback{
+  padding:10px;border-radius:10px;display:none;font-weight:700;
+}
+.feedback.ok{ background:#e8fbef;color:#0b5b33;border-left:4px solid var(--success) }
+.feedback.bad{ background:#fff4f4;color:#7a2b2b;border-left:4px solid var(--danger) }
+
+/* Aside */
+.aside .score{ font-weight:900;color:var(--accent);font-size:1.2rem;text-align:right }
+.progress{height:10px;background:#f2f2f2;border-radius:999px;overflow:hidden;margin-top:8px}
+.progress-fill{height:100%;width:0%;background:linear-gradient(90deg,var(--accent),#ffb289);transition:width 420ms cubic-bezier(.2,.9,.2,1)}
+
+/* Endbox */
+#endBox{
+  display:none;margin-top:12px;padding:14px;border-radius:12px;background:#fff9f7;border:1px solid rgba(255,140,66,0.06);
+  text-align:center;
+}
+#endBox .btn-primary{ display:inline-block;margin-top:10px; }
+
+/* Small screens */
+@media (max-width:560px){
+  .input-prefix { display:none; }
+  .term-body { min-height:320px; }
+}
+
+/* Confetti */
+#confettiCanvas{
+  position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:9999;display:none;
+}
+
+/* Simple utility classes used by script */
+.hidden { display:none !important; }
+.small-muted { color:var(--muted); font-size:.9rem; }
+
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+  <div class="header">
+    <div class="brand">
+      <div class="logo">LE</div>
+      <div>
+        <h1 class="h-title">Chapter 2 — Shell & Command Line</h1>
+        <p class="h-sub">Latihan perintah shell menengah — praktik interaktif, progress tersimpan.</p>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:12px;align-items:center">
+      <a href="{% url 'pembelajaran:belajar_cli' %}" class="btn btn-ghost" title="Kembali ke modul">Kembali</a>
+    </div>
+  </div>
+
+  <div class="grid">
+    <main class="card">
+      <div style="display:flex;justify-content:space-between;align-items:center;gap:12px">
+        <div>
+          <div id="qLabel" style="font-weight:800;color:var(--accent);font-size:1rem">Soal 1</div>
+          <div id="qSub" style="color:var(--muted);font-size:.95rem">Soal 1 dari 10</div>
+        </div>
+        <div id="scoreLabel" style="font-weight:900;color:var(--accent);font-size:1.05rem">0 / 10</div>
+      </div>
+
+      <div id="qText" style="margin-top:12px;color:#222"></div>
+
+      <section class="terminal" aria-label="Terminal practice" style="margin-top:16px">
+        <div class="term-head">
+          <div style="display:flex;gap:10px;align-items:center">
+            <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18)"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18)"></div>
+            <div style="width:10px;height:10px;border-radius:50%;background:rgba(255,255,255,0.18)"></div>
+            <div style="font-weight:800;margin-left:8px">Terminal — ketik perintah lalu Enter</div>
+          </div>
+
+          <div style="display:flex;gap:8px;align-items:center">
+            <button id="btnClear" class="btn btn-ghost" aria-label="Clear terminal">Clear</button>
+            <button id="btnCopy" class="btn btn-ghost" aria-label="Copy output">Copy</button>
+          </div>
+        </div>
+
+        <div class="term-body">
+          <div id="cliOutput" class="cli-output" role="log" aria-live="polite"></div>
+
+          <div class="input-row" style="margin-top:6px">
+            <div class="input-prefix">user@linux:$</div>
+            <input id="cliInput" class="input" type="text" placeholder="Ketik perintah..." aria-label="Terminal input">
+            <button id="btnSubmit" class="btn btn-primary">Kirim</button>
+            <button id="btnNext" class="btn btn-primary" style="display:none">Next</button>
+          </div>
+
+          <div id="feedback" class="feedback" role="status" aria-live="polite"></div>
+          <div id="endBox">
+            <!-- filled when finished -->
+          </div>
+        </div>
+      </section>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:12px">
+        <button id="btnSkip" class="btn btn-ghost">Lewati</button>
+        <div style="color:var(--muted);font-size:.9rem">Tip: ketik <b>help</b> untuk daftar perintah.</div>
+      </div>
+    </main>
+
+    <aside class="card aside" aria-labelledby="progress-heading">
+      <div id="progress-heading" style="display:flex;justify-content:space-between;align-items:center">
+        <div style="font-weight:800;color:var(--accent)">Progress Quiz</div>
+        <div style="font-size:.95rem;color:var(--muted)">10 soal — praktik</div>
+      </div>
+      <div style="margin-top:12px">
+        <div class="progress" aria-hidden="true"><div id="progressFill" class="progress-fill" style="width:0%"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px">
+          <div style="color:var(--muted)">Skor</div>
+          <div class="score" id="scoreValueSide">0 / 10</div>
+        </div>
+      </div>
+
+      <div style="margin-top:14px;display:flex;gap:8px">
+        <button id="btnRestart" class="btn btn-ghost" style="flex:1">Mulai Ulang</button>
+        <button id="btnFinishNow" class="btn btn-primary" style="display:none">Selesai</button>
+      </div>
+
+      <div style="margin-top:12px;color:var(--muted);font-size:.9rem">Progress disimpan otomatis di browser — localStorage.</div>
+    </aside>
+  </div>
+</div>
+
+<canvas id="confettiCanvas"></canvas>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* Chapter 2 interactive quiz - full template script
+   - explanation after each correct answer shown as terminal lines
+   - answers persisted to localStorage
+*/
+
+/* QUESTIONS: each entry includes text, expects (array) and an explanation string */
+const QUESTIONS = [
+  {
+    text: "Tampilkan teks 'Halo Dunia' di terminal.",
+    expects: ["echo Halo Dunia", "echo 'Halo Dunia'", 'echo "Halo Dunia"'],
+    explain: "echo menulis teks ke output standar. Contoh: `echo Halo Dunia` akan mencetak Halo Dunia ke terminal."
+  },
+  {
+    text: "Salin file catatan.txt menjadi catatan_backup.txt.",
+    expects: ["cp catatan.txt catatan_backup.txt", "cp ./catatan.txt ./catatan_backup.txt"],
+    explain: "cp adalah perintah copy. Sintaks dasar: `cp sumber tujuan`. Ini membuat salinan file."
+  },
+  {
+    text: "Pindahkan file catatan_backup.txt ke folder /home/user.",
+    expects: ["mv catatan_backup.txt /home/user", "mv ./catatan_backup.txt /home/user/"],
+    explain: "mv memindahkan atau mengganti nama file. `mv file target_dir` memindahkan file ke direktori tujuan."
+  },
+  {
+    text: "Tampilkan 5 baris pertama dari file log.txt.",
+    expects: ["head -n 5 log.txt", "head log.txt", "head -5 log.txt"],
+    explain: "head menampilkan baris awal file. `head -n 5 file` menampilkan 5 baris pertama."
+  },
+  {
+    text: "Tampilkan 5 baris terakhir dari file log.txt.",
+    expects: ["tail -n 5 log.txt", "tail log.txt", "tail -5 log.txt"],
+    explain: "tail menampilkan baris akhir file. `tail -n 5` mengeluarkan 5 baris terakhir."
+  },
+  {
+    text: "Cari kata 'error' di file log.txt.",
+    expects: ["grep error log.txt", "grep 'error' log.txt"],
+    explain: "grep mencari pola teks di file. `grep error file` menampilkan baris yang mengandung 'error'."
+  },
+  {
+    text: "Ubah izin file script.sh menjadi dapat dieksekusi.",
+    expects: ["chmod +x script.sh", "chmod 755 script.sh"],
+    explain: "chmod mengubah izin file. `+x` menambahkan izin eksekusi sehingga file bisa dijalankan."
+  },
+  {
+    text: "Lihat isi file script.sh.",
+    expects: ["cat script.sh", "less script.sh", "more script.sh"],
+    explain: "cat menampilkan seluruh isi file ke output. Untuk file panjang gunakan less atau more untuk membaca per halaman."
+  },
+  {
+    text: "Tulis teks 'Belajar CLI menyenangkan!' ke file pesan.txt.",
+    expects: [
+      "echo Belajar CLI menyenangkan! > pesan.txt",
+      "echo 'Belajar CLI menyenangkan!' > pesan.txt",
+      'echo "Belajar CLI menyenangkan!" > pesan.txt'
+    ],
+    explain: "Operator `>` mengarahkan output ke file. Jika file tidak ada, akan dibuat; jika ada, akan ditimpa."
+  },
+  {
+    text: "Hapus file pesan.txt.",
+    expects: ["rm pesan.txt", "rm ./pesan.txt"],
+    explain: "rm menghapus file. Hati-hati: penghapusan tidak dapat dikembalikan dari command line biasa."
+  }
+];
+
+const STORAGE_KEY = 'linuxedu_ch2_v1_state';
+const COMPLETED_KEY = 'linuxedu_ch2_completed';
+const SOUND_KEY = 'linuxedu_ch2_sound';
+
+/* DOM refs */
+const dom = {
+  cliOutput: document.getElementById('cliOutput'),
+  cliInput: document.getElementById('cliInput'),
+  btnSubmit: document.getElementById('btnSubmit'),
+  btnNext: document.getElementById('btnNext'),
+  btnSkip: document.getElementById('btnSkip'),
+  btnClear: document.getElementById('btnClear'),
+  btnCopy: document.getElementById('btnCopy'),
+  btnRestart: document.getElementById('btnRestart'),
+  btnFinishNow: document.getElementById('btnFinishNow'),
+  qLabel: document.getElementById('qLabel'),
+  qSub: document.getElementById('qSub'),
+  qText: document.getElementById('qText'),
+  scoreLabel: document.getElementById('scoreLabel'),
+  scoreValueSide: document.getElementById('scoreValueSide'),
+  progressFill: document.getElementById('progressFill'),
+  feedback: document.getElementById('feedback'),
+  endBox: document.getElementById('endBox'),
+  soundToggle: document.getElementById('soundToggle'),
+  confettiCanvas: document.getElementById('confettiCanvas')
+};
+
+/* runtime state */
+let idx = 0;
+let correct = 0;
+let virtualFS = { "/": ["home","usr","etc"], "/home": ["user"], "/home/user": [] };
+let currentDir = "/";
+let answeredCorrect = Array(QUESTIONS.length).fill(false);
+let soundEnabled = (localStorage.getItem(SOUND_KEY) === 'true');
+
+/* utilities */
+const clamp = (n,a,b) => Math.max(a, Math.min(b, n));
+const norm = s => (s||'').trim().replace(/\s+/g,' ');
+function playBeep(freq, duration = 90){
+  if(!soundEnabled) return;
+  try{
+    const ctx = new (window.AudioContext || window.webkitAudioContext)();
+    const o = ctx.createOscillator();
+    const g = ctx.createGain();
+    o.type = 'sine'; o.frequency.value = freq;
+    g.gain.value = 0.02;
+    o.connect(g); g.connect(ctx.destination);
+    o.start();
+    setTimeout(()=>{ o.stop(); ctx.close(); }, duration);
+  }catch(e){}
+}
+
+/* virtual filesystem helpers */
+function toAbs(arg){
+  if(!arg) return currentDir;
+  arg = (arg||'').trim();
+  if(arg.startsWith('/')) return arg.replace(/\/+$/,'') || '/';
+  if(arg === '~') return '/home/user';
+  const base = currentDir === '/' ? '' : currentDir;
+  const join = (base + '/' + arg).replace(/\/+/g,'/');
+  const parts = join.split('/').filter(Boolean);
+  const stack = [];
+  for(const p of parts){
+    if(p === '..') stack.pop();
+    else if(p === '.' || p === '') continue;
+    else stack.push(p);
+  }
+  return '/' + stack.join('/');
+}
+
+function vmkdir(arg){
+  const p = toAbs(arg);
+  if(virtualFS[p]) return false;
+  const parent = p.substring(0, p.lastIndexOf('/')) || '/';
+  const name = p.split('/').pop();
+  if(!virtualFS[parent]) virtualFS[parent] = [];
+  if(!virtualFS[parent].includes(name)) virtualFS[parent].push(name);
+  virtualFS[p] = [];
+  return true;
+}
+
+function vtouch(arg){
+  const p = toAbs(arg);
+  const parent = p.substring(0, p.lastIndexOf('/')) || '/';
+  const name = p.split('/').pop();
+  if(!virtualFS[parent]) virtualFS[parent] = [];
+  if(!virtualFS[parent].includes(name)) virtualFS[parent].push(name);
+  return true;
+}
+
+function vrm(arg){
+  const p = toAbs(arg);
+  const parent = p.substring(0, p.lastIndexOf('/')) || '/';
+  const name = p.split('/').pop();
+  if(virtualFS[parent]) virtualFS[parent] = virtualFS[parent].filter(x=>x!==name);
+  if(virtualFS[p]) delete virtualFS[p];
+  return true;
+}
+
+function vcd(arg){
+  const p = toAbs(arg);
+  if(virtualFS[p]) { currentDir = p; return true; }
+  return false;
+}
+
+function vls(arg){
+  const p = arg ? toAbs(arg) : currentDir;
+  return (virtualFS[p] || []).join('  ');
+}
+
+/* terminal rendering */
+function appendLine(text, cls='system', instant=false){
+  const d = document.createElement('div');
+  d.className = 'cli-line ' + (cls === 'user' ? 'user' : 'system');
+  d.textContent = text;
+  dom.cliOutput.appendChild(d);
+  if(instant) d.classList.add('show'); else setTimeout(()=>d.classList.add('show'), 18);
+  dom.cliOutput.scrollTop = dom.cliOutput.scrollHeight;
+  return d;
+}
+
+function appendTypewriter(text, speed=6){
+  const el = document.createElement('div');
+  el.className = 'cli-line system';
+  dom.cliOutput.appendChild(el);
+  let i = 0;
+  function step(){
+    el.textContent = text.slice(0, i+1);
+    dom.cliOutput.scrollTop = dom.cliOutput.scrollHeight;
+    i++;
+    if(i < text.length) setTimeout(step, speed);
+    else el.classList.add('show');
+  }
+  step();
+  return el;
+}
+
+/* command processor */
+function processCmd(raw){
+  const cmd = norm(raw);
+  if(!cmd) return;
+  appendLine('$ ' + cmd, 'user', true);
+  const [base, ...rest] = cmd.split(' ');
+  const arg = rest.join(' ').trim();
+
+  switch(base){
+    case 'help':
+      appendTypewriter('Perintah tersedia: echo, pwd, ls, cd, cp, mv, head, tail, grep, chmod, cat, touch, rm, clear', 6);
+      break;
+    case 'echo':
+      // simulate redirection if present
+      if(cmd.includes('>')){
+        const parts = cmd.split('>');
+        const left = parts[0].trim();
+        const dest = parts.slice(1).join('>').trim();
+        const text = left.replace(/^echo\s+/i,'');
+        vtouch(dest);
+        appendLine('', 'system'); // blank for spacing
+        appendLine(text, 'system');
+        appendLine(`Output diarahkan ke ${dest}`, 'system');
+      } else {
+        const out = arg;
+        appendLine(out, 'system');
+      }
+      break;
+    case 'pwd':
+      appendLine(currentDir, 'system');
+      break;
+    case 'ls':
+      appendLine(vls(arg) || '', 'system');
+      break;
+    case 'cd':
+      if(!arg) appendLine('Gunakan: cd [folder]', 'system');
+      else if(vcd(arg)) appendLine('Pindah ke ' + currentDir, 'system');
+      else appendLine('Direktori tidak ditemukan: ' + arg, 'system');
+      break;
+    case 'cp':
+      if(!arg) { appendLine('Gunakan: cp sumber tujuan', 'system'); break; }
+      // naive parse: cp a b
+      const cpParts = cmd.split(/\s+/).slice(1);
+      if(cpParts.length >= 2){
+        const src = cpParts[0];
+        const dst = cpParts[1];
+        // if src exists in virtualFS parent listing, simulate copy by touching dst
+        vtouch(dst);
+        appendLine(`Menyalin ${src} -> ${dst}`, 'system');
+      } else appendLine('Sintaks cp tidak lengkap', 'system');
+      break;
+    case 'mv':
+      if(!arg) { appendLine('Gunakan: mv sumber tujuan', 'system'); break; }
+      const mvParts = cmd.split(/\s+/).slice(1);
+      if(mvParts.length >= 2){
+        const src = mvParts[0];
+        const dst = mvParts[1];
+        // simulate: remove src entry then vtouch dst
+        vrm(src);
+        vtouch(dst);
+        appendLine(`Memindahkan ${src} -> ${dst}`, 'system');
+      } else appendLine('Sintaks mv tidak lengkap', 'system');
+      break;
+    case 'head':
+      appendLine('(Menampilkan baris awal - simulasi)', 'system');
+      break;
+    case 'tail':
+      appendLine('(Menampilkan baris akhir - simulasi)', 'system');
+      break;
+    case 'grep':
+      appendLine('(Mencari pola di file - simulasi)', 'system');
+      break;
+    case 'chmod':
+      if(!arg) appendLine('Gunakan: chmod [opsi] file', 'system');
+      else appendLine('Izin diubah: ' + arg, 'system');
+      break;
+    case 'cat':
+      appendLine('(Menampilkan isi file - simulasi atau kosong)', 'system');
+      break;
+    case 'touch':
+      if(!arg) appendLine('Gunakan: touch [nama_file]', 'system');
+      else { vtouch(arg); appendLine('File dibuat: ' + arg, 'system'); }
+      break;
+    case 'rm':
+      if(!arg) appendLine('Gunakan: rm [file]', 'system');
+      else { vrm(arg); appendLine('File dihapus: ' + arg, 'system'); }
+      break;
+    case 'clear':
+      dom.cliOutput.innerHTML = '';
+      break;
+    default:
+      appendLine("Perintah '" + cmd + "' tidak dikenal. Ketik 'help' untuk bantuan.", 'system');
+  }
+}
+
+/* check answer logic (accept equals or startsWith expected) */
+function isAnswerCorrect(cmd, qIndex){
+  const normalized = norm(cmd);
+  const q = QUESTIONS[qIndex];
+  if(!q) return false;
+  return q.expects.some(exp => {
+    const nexp = norm(exp);
+    if(normalized === nexp) return true;
+    if(normalized.startsWith(nexp)) return true;
+    // special accept: allowing small variations like head -5 == head -n 5
+    return false;
+  });
+}
+
+/* explanation rendering when correct */
+function showExplanation(qIndex){
+  const explanation = QUESTIONS[qIndex] && QUESTIONS[qIndex].explain;
+  if(!explanation) return;
+  appendTypewriter('--- Penjelasan ---', 6);
+  setTimeout(()=> appendTypewriter(explanation, 6), 160);
+}
+
+/* update UI header & progress */
+function updateHeader(){
+  dom.qLabel.textContent = `Soal ${idx+1}`;
+  dom.qSub.textContent = `Soal ${idx+1} dari ${QUESTIONS.length}`;
+  dom.qText.textContent = QUESTIONS[idx].text;
+  dom.scoreLabel.textContent = `${correct} / ${QUESTIONS.length}`;
+  dom.scoreValueSide.textContent = `${correct} / ${QUESTIONS.length}`;
+  const percent = Math.round((correct / QUESTIONS.length) * 100);
+  dom.progressFill.style.width = percent + '%';
+
+  if(correct >= QUESTIONS.length){
+    dom.btnFinishNow.style.display = 'inline-block';
+    dom.btnFinishNow.disabled = false;
+  } else {
+    dom.btnFinishNow.style.display = 'none';
+  }
+}
+
+/* submit answer handler */
+function submitAnswer(){
+  const val = dom.cliInput.value;
+  if(!val) return;
+  processCmd(val);
+  const ok = isAnswerCorrect(val, idx);
+  if(ok && !answeredCorrect[idx]){
+    answeredCorrect[idx] = true;
+    correct++;
+    playBeep(880, 90);
+    dom.feedback.className = 'feedback ok';
+    dom.feedback.textContent = 'Jawaban benar — tekan Next untuk lanjut.';
+    dom.feedback.style.display = 'block';
+    dom.btnNext.style.display = 'inline-block';
+    showExplanation(idx);
+    saveState();
+  } else if(ok && answeredCorrect[idx]){
+    dom.feedback.className = 'feedback ok';
+    dom.feedback.textContent = 'Soal ini sudah terjawab benar. Tekan Next.';
+    dom.feedback.style.display = 'block';
+  } else {
+    playBeep(220, 160);
+    dom.feedback.className = 'feedback bad';
+    dom.feedback.textContent = 'Jawaban belum tepat. Coba lagi atau ketik help.';
+    dom.feedback.style.display = 'block';
+  }
+  dom.cliInput.value = '';
+  updateHeader();
+}
+
+/* next question logic */
+function nextQuestion(){
+  // find next index (first unanswered after current)
+  let nextIdx = idx;
+  for(let i = idx+1; i < QUESTIONS.length; i++){
+    nextIdx = i; break;
+  }
+  if(nextIdx === idx){
+    // if at last, find any unanswered
+    const firstUnanswered = answeredCorrect.indexOf(false);
+    if(firstUnanswered >= 0) { idx = firstUnanswered; }
+    else {
+      // if all answered, finish
+      if(correct >= QUESTIONS.length) { finishQuiz(); return; }
+      // else cycle to start
+      idx = (idx + 1) % QUESTIONS.length;
+    }
+  } else idx = nextIdx;
+
+  dom.btnNext.style.display = 'none';
+  dom.feedback.style.display = 'none';
+  dom.cliOutput.innerHTML = '';
+  updateHeader();
+  dom.cliInput.focus();
+}
+
+/* finish sequence */
+function finishQuiz(){
+  dom.cliOutput.innerHTML = '';
+  const lines = [
+    '========================================',
+    'SELAMAT — Anda sudah menyelesaikan Chapter 2',
+    `Nilai: ${correct} / ${QUESTIONS.length}`,
+    '',
+    'Terus praktik untuk memperkuat keterampilan shell kamu!',
+    '========================================'
+  ];
+  lines.forEach((ln,i) => setTimeout(()=>appendLine(ln, 'system'), i*180));
+  setTimeout(()=> {
+    dom.endBox.style.display = 'block';
+    dom.endBox.innerHTML = `
+      <div style="font-weight:900;color:var(--accent);font-size:1.05rem">✅ Chapter 2 Selesai!</div>
+      <div style="margin-top:8px;color:var(--muted)">Klik 'Selesai' untuk kembali ke halaman Belajar CLI.</div>
+    `;
+    const finishBtn = document.createElement('a');
+    finishBtn.textContent = 'Selesai — Kembali ke Belajar CLI';
+    finishBtn.href = "{% url 'pembelajaran:belajar_cli' %}";
+    finishBtn.className = 'btn btn-primary';
+    finishBtn.style.display = 'inline-block';
+    finishBtn.style.marginTop = '12px';
+    dom.endBox.appendChild(finishBtn);
+
+    // save completion flags
+    localStorage.setItem(COMPLETED_KEY, 'true');
+    localStorage.setItem('chapter2_done', JSON.stringify([...Array(QUESTIONS.length).keys()]));
+    startConfetti();
+  }, lines.length*180 + 200);
+}
+
+/* save/load */
+function saveState(){
+  try{
+    const state = { idx, correct, virtualFS, currentDir, answeredCorrect, timestamp: Date.now() };
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  }catch(e){ console.warn('Cannot save state', e); }
+}
+function loadState(){
+  try{
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if(!raw) return false;
+    const s = JSON.parse(raw);
+    if(s.idx != null) idx = s.idx;
+    if(s.correct != null) correct = s.correct;
+    if(s.virtualFS) virtualFS = s.virtualFS;
+    if(s.currentDir) currentDir = s.currentDir;
+    if(Array.isArray(s.answeredCorrect)) answeredCorrect = s.answeredCorrect;
+    return true;
+  }catch(e){ return false; }
+}
+
+/* events */
+dom.btnSubmit.addEventListener('click', submitAnswer);
+dom.cliInput.addEventListener('keydown', (e) => {
+  if(e.key === 'Enter') submitAnswer();
+  if(e.key === 'Escape') dom.cliInput.blur();
+});
+dom.btnNext.addEventListener('click', nextQuestion);
+dom.btnSkip.addEventListener('click', () => {
+  let next = (idx + 1) % QUESTIONS.length;
+  idx = next; dom.cliOutput.innerHTML = ''; dom.feedback.style.display = 'none'; dom.btnNext.style.display = 'none'; updateHeader();
+});
+dom.btnClear.addEventListener('click', () => { dom.cliOutput.innerHTML = ''; appendLine('(Terminal dibersihkan)', 'system', true); });
+dom.btnCopy.addEventListener('click', () => {
+  try {
+    navigator.clipboard.writeText(dom.cliOutput.innerText);
+    appendLine('(Output disalin ke clipboard)', 'system', true);
+  } catch(e) {
+    appendLine('(Gagal menyalin — periksa izin browser)', 'system', true);
+  }
+});
+dom.btnRestart.addEventListener('click', () => {
+  if(confirm('Mulai ulang quiz? Semua progress lokal akan hilang.')) resetAll();
+});
+dom.btnFinishNow.addEventListener('click', () => {
+  if(correct >= QUESTIONS.length) finishQuiz();
+  else alert('Selesaikan semua soal dengan jawaban benar dulu untuk menyelesaikan.');
+});
+if(dom.soundToggle) {
+  dom.soundToggle.addEventListener('change', (e) => {
+    soundEnabled = !!e.target.checked;
+    localStorage.setItem(SOUND_KEY, soundEnabled ? 'true' : 'false');
+  });
+}
+
+
+function resetAll(){
+  idx = 0; correct = 0; virtualFS = { "/": ["home","usr","etc"], "/home": ["user"], "/home/user": [] }; currentDir = '/';
+  answeredCorrect = Array(QUESTIONS.length).fill(false);
+  localStorage.removeItem(STORAGE_KEY);
+  localStorage.removeItem(COMPLETED_KEY);
+  dom.cliOutput.innerHTML = '';
+  dom.endBox.style.display = 'none';
+  updateHeader();
+}
+
+/* confetti simple (canvas) */
+let confettiContext = null;
+let confettiPieces = [];
+function startConfetti(){
+  const canvas = dom.confettiCanvas;
+  canvas.style.display = 'block';
+  canvas.width = window.innerWidth;
+  canvas.height = window.innerHeight;
+  confettiContext = canvas.getContext('2d');
+
+  confettiPieces = [];
+  const count = 120;
+  for(let i=0;i<count;i++){
+    confettiPieces.push({
+      x: Math.random() * canvas.width,
+      y: -Math.random() * canvas.height,
+      r: 6 + Math.random()*8,
+      dx: -2 + Math.random()*4,
+      dy: 2 + Math.random()*4,
+      angle: Math.random()*360,
+      da: -0.05 + Math.random()*0.1,
+      color: ['#ff8c42','#ffb289','#ffd5b6','#ffe6d6'][Math.floor(Math.random()*4)]
+    });
+  }
+
+  let start = null;
+  function frame(ts){
+    if(!start) start = ts;
+    const elapsed = ts - start;
+    confettiContext.clearRect(0,0,canvas.width,canvas.height);
+    confettiPieces.forEach(p => {
+      p.x += p.dx;
+      p.y += p.dy;
+      p.angle += p.da;
+      confettiContext.save();
+      confettiContext.translate(p.x, p.y);
+      confettiContext.rotate(p.angle);
+      confettiContext.fillStyle = p.color;
+      confettiContext.fillRect(-p.r/2, -p.r/2, p.r, p.r*0.6);
+      confettiContext.restore();
+    });
+    if(elapsed < 3000) requestAnimationFrame(frame);
+    else {
+      confettiContext.clearRect(0,0,canvas.width,canvas.height);
+      canvas.style.display = 'none';
+    }
+  }
+  requestAnimationFrame(frame);
+}
+
+/* boot */
+(function init(){
+  loadState();
+  // compute correct from answeredCorrect
+  correct = (answeredCorrect || []).filter(Boolean).length;
+  if(!Array.isArray(answeredCorrect) || answeredCorrect.length !== QUESTIONS.length) {
+    answeredCorrect = Array(QUESTIONS.length).fill(false);
+  }
+  idx = clamp(idx, 0, QUESTIONS.length-1);
+  updateHeader();
+  appendLine('LinuxEdu Shell — ketik help untuk bantuan', 'system', true);
+  setTimeout(()=>dom.cliInput.focus(), 300);
+
+  document.addEventListener('keydown', (e) => {
+    if(e.altKey && e.key.toLowerCase() === 'n') {
+      if(dom.btnNext.style.display !== 'none') dom.btnNext.click();
+    }
+    if(e.altKey && e.key.toLowerCase() === 's' && dom.soundToggle) {
+      dom.soundToggle.checked = !dom.soundToggle.checked;
+      dom.soundToggle.dispatchEvent(new Event('change'));
+    }
+  });
+
+  setInterval(saveState, 1500);
+  window.addEventListener('beforeunload', saveState);
+})();
+</script>
+{% endblock %}

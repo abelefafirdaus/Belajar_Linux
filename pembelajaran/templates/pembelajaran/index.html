@@ -1,0 +1,49 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+{% block title %}Beranda — LinuxEdu{% endblock %}
+
+{% block content %}
+<div class="row align-items-center">
+  <div class="col-lg-7">
+    <h1 class="display-5 fw-bold accent-heading">Belajar Linux dengan Ceria & Terstruktur</h1>
+    <p class="lead text-muted mb-4">
+      Materi command line untuk pemula hingga pemakaian lanjutan.</p> <cd> 
+        <p class="lead text-muted mb-4"> Interaktif, Ringan, Praktis.</p>
+
+    <div class="d-flex gap-2 flex-wrap">
+      <a href="{% url 'pembelajaran:belajar_cli' %}" class="btn btn-primary btn-lg shadow-sm">Mulai Belajar</a>
+      <a href="{% url 'pembelajaran:kamus_cli' %}" class="btn btn-outline-secondary btn-lg">Kamus CLI</a>
+    </div>
+
+    <div class="mt-4">
+      <ul class="list-unstyled">
+        <li class="py-1"><span class="dot bg-accent"></span> Materi Dari Buku </li>
+        <li class="py-1"><span class="dot bg-accent"></span> Belajar Command Line Secara Interaktif</li>
+      </ul>
+    </div>
+  </div>
+
+<hr class="my-5">
+
+<div class="row g-3">
+  <div class="col-md-4">
+    <div class="card hover-elevate h-100">
+      <div class="card-body">
+        <h5 class="card-title">Linux Dasar</h5>
+        <p class="card-text text-muted">Shell, filesystem, permission, process basics. (coming soon)</p>
+        <a href="{% url 'pembelajaran:belajar_cli' %}" class="stretched-link"></a>
+      </div>
+    </div>
+  </div>
+
+  <div class="col-md-4">
+    <div class="card hover-elevate h-100">
+      <div class="card-body">
+        <h5 class="card-title">Tutorial Install</h5>
+        <p class="card-text text-muted">Langkah instalasi dual-boot, live USB, dan VM. (coming soon)</p>
+        <a href="{% url 'pembelajaran:install_linux' %}" class="stretched-link"></a>
+      </div>
+    </div>
+  </div>
+</div>
+{% endblock %}

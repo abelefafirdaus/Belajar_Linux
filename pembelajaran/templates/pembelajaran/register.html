@@ -1,0 +1,68 @@
+{% extends 'pembelajaran/base.html' %}
+
+{% block title %}Daftar Akun — NuxLab{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-8 col-lg-6">
+        <div class="card shadow-lg border-0" style="border-radius: 15px;">
+            <div class="card-body p-5">
+                <h2 class="text-center fw-bold mb-4" style="color: #e95420;">Buat Akun Baru</h2>
+                
+                <form method="POST">
+                    {% csrf_token %}
+                    
+                    {% if form.errors %}
+                        <div class="alert alert-danger">
+                            <strong>Ups! Ada kesalahan:</strong>
+                            {{ form.errors }}
+                        </div>
+                    {% endif %}
+
+                    <div class="row g-3">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Nama Depan</label>
+                                {{ form.first_name }}
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label class="form-label fw-bold text-muted">Nama Belakang</label>
+                                {{ form.last_name }}
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Email</label>
+                        {{ form.email }}
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="form-label fw-bold text-muted">Username</label>
+                        {{ form.username }}
+                        <div class="form-text">Gunakan username unik tanpa spasi.</div>
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted">Password</label>
+                        {{ form.password }}
+                    </div>
+
+                    <div class="mb-4">
+                        <label class="form-label fw-bold text-muted">Konfirmasi Password</label>
+                        {{ form.confirm_password }}
+                    </div>
+
+                    <button type="submit" class="btn w-100 text-white fw-bold py-2 mt-2" style="background: #e95420; border-radius: 10px;">DAFTAR AKUN</button>
+                </form>
+
+                <div class="text-center mt-4">
+                    <small class="text-muted">Sudah punya akun? <a href="{% url 'pembelajaran:login' %}" style="color: #e95420; text-decoration: none; font-weight: 700;">Masuk di sini</a></small>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

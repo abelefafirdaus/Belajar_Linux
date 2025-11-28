@@ -1,0 +1,333 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+{% block title %}Kamus CLI — LinuxEdu{% endblock %}
+
+{% block head_extra %}
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;800&display=swap" rel="stylesheet">
+<style>
+/* ====== Variables & Basic ====== */
+:root{
+  --accent: #ff8c42;
+  --accent-600:#e26f2e;
+  --muted: #6b6b6b;
+  --bg-start: #fff;
+  --bg-end: #fffaf6;
+  --card: #fff;
+  --text: #222;
+  --radius: 12px;
+  --shadow: 0 8px 30px rgba(10,10,10,0.06);
+  --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  --ease: cubic-bezier(.2,.9,.2,1);
+  --panel-width: 420px;
+}
+
+*{box-sizing:border-box}
+html,body{height:100%;margin:0;font-family:Inter,system-ui,-apple-system,Segoe UI,Roboto,"Helvetica Neue",Arial;background:linear-gradient(180deg,var(--bg-start),var(--bg-end));color:var(--text);-webkit-font-smoothing:antialiased}
+
+/* Page wrap */
+.page-wrap{max-width:1180px;margin:28px auto;padding:18px}
+
+/* Header */
+.header h1{margin:0;font-size:1.5rem;color:var(--accent);font-weight:800}
+.header p{margin:6px 0 0;color:var(--muted)}
+
+/* Tools */
+.tools{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:14px}
+.search-box{display:flex;gap:8px;flex:1;min-width:220px}
+.search-box input{flex:1;padding:10px 12px;border-radius:10px;border:1px solid #eee;font-size:0.95rem}
+.search-box button{background:var(--accent);color:#fff;border:none;padding:10px 12px;border-radius:10px;font-weight:700;cursor:pointer}
+.filter{display:flex;gap:8px;flex-wrap:wrap}
+.filter button{background:#f4f4f4;border:none;padding:8px 10px;border-radius:10px;font-weight:700;cursor:pointer}
+.filter button.active{background:var(--accent);color:#fff}
+
+/* Grid of cards */
+.grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:14px;margin-top:18px}
+.card{background:var(--card);border-radius:12px;padding:14px;border:1px solid rgba(0,0,0,.04);box-shadow:var(--shadow);transition:transform .18s var(--ease)}
+.card:hover{transform:translateY(-6px)}
+.card h3{margin:0;color:var(--accent);font-size:1.05rem}
+.card p{margin:8px 0;color:var(--muted);font-size:0.95rem}
+.card small{display:block;color:#999;margin-top:6px;font-family:var(--mono);font-size:0.88rem}
+.actions{display:flex;gap:8px;margin-top:10px}
+
+/* Buttons */
+.btn{border-radius:10px;padding:8px 12px;border:none;font-weight:700;cursor:pointer}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-ghost{background:transparent;border:1px solid rgba(0,0,0,.06);color:var(--text)}
+
+/* mini terminal (center popup) */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,0.45);opacity:0;pointer-events:none;transition:opacity .2s ease;z-index:98}
+.overlay.show{opacity:1;pointer-events:auto}
+.minicli{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%) scale(.98);width:640px;max-width:96%;background:#0b0b0b;color:#e9f7e9;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.4);opacity:0;pointer-events:none;transition:all .2s ease;z-index:99}
+.minicli.show{opacity:1;pointer-events:auto;transform:translate(-50%,-50%) scale(1)}
+.minicli .head{display:flex;justify-content:space-between;align-items:center;padding:12px 14px;background:linear-gradient(90deg,var(--accent),var(--accent-600));border-radius:12px 12px 0 0;color:#fff;font-weight:700}
+.minicli .body{padding:14px;font-family:var(--mono);max-height:320px;overflow:auto}
+.minicli .body .line{margin:6px 0}
+.minicli .body .user{color:#ffd8b8}
+.minicli .body .sys{color:#bff3b0}
+.minicli .foot{display:flex;justify-content:space-between;align-items:center;padding:10px 14px;background:#0a0a0a;border-radius:0 0 12px 12px}
+.minicli .foot button{padding:8px 10px;border-radius:8px;border:1px solid rgba(255,255,255,.06);background:transparent;color:#fff;cursor:pointer}
+
+/* slide-right detail panel */
+.sidepanel{position:fixed;top:0;right:0;height:100%;width:var(--panel-width);max-width:92%;background:var(--card);box-shadow:-18px 0 40px rgba(0,0,0,.12);transform:translateX(100%);transition:transform .28s var(--ease);z-index:100;padding:18px;display:flex;flex-direction:column}
+.sidepanel.open{transform:translateX(0)}
+.sidepanel .head{display:flex;justify-content:space-between;align-items:center;gap:12px}
+.sidepanel h2{margin:0;font-size:1.1rem;color:var(--accent)}
+.sidepanel .content{margin-top:12px;overflow:auto;padding-right:6px;flex:1}
+.sidepanel .meta{color:var(--muted);font-size:.95rem;margin-top:8px}
+.sidepanel .example{margin-top:12px;background:#fff7f1;border:1px solid rgba(255,140,66,0.08);padding:10px;border-radius:8px;font-family:var(--mono)}
+.sidepanel .closebtn{background:transparent;border:1px solid rgba(0,0,0,.06);padding:8px 10px;border-radius:8px;cursor:pointer}
+
+@media (max-width:720px){
+  .minicli{width:92%}
+  .sidepanel{width:100%}
+}
+
+.empty-msg{color:#8b8b8b;padding:18px;background:#fff;border-radius:10px;text-align:center}
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="page-wrap">
+  <div class="header">
+    <h1>Kamus Perintah CLI</h1>
+    <p>Pilih kategori lalu klik <strong>Coba</strong> (mini terminal) atau <strong>Detail</strong> (panel kanan).</p>
+  </div>
+
+  <div class="tools">
+    <div class="search-box">
+      <input id="searchInput" placeholder="Cari perintah seperti 'ls', 'cd', 'sudo'...">
+      <button id="searchBtn" class="btn btn-primary">Cari</button>
+    </div>
+
+    <div class="filter">
+      <button class="active" data-cat="all">Semua</button>
+      <button data-cat="basic">Dasar</button>
+      <button data-cat="filesystem">File</button>
+      <button data-cat="system">Sistem</button>
+      <button data-cat="network">Jaringan</button>
+      <button data-cat="advanced">Lanjutan</button>
+    </div>
+  </div>
+
+  <div id="cmdGrid" class="grid"></div>
+</div>
+
+<!-- Overlay and mini terminal -->
+<div id="overlay" class="overlay"></div>
+
+<div id="miniCli" class="minicli">
+  <div class="head">
+    <div id="miniTitle">Terminal — simulasi</div>
+    <button id="miniClose" style="background:transparent;border:0;color:#fff;font-size:20px;cursor:pointer">✕</button>
+  </div>
+  <div class="body" id="miniBody"></div>
+  <div class="foot">
+    <small id="miniStatus" style="color:#ddd">ready</small>
+    <div>
+      <button id="miniRun" class="btn btn-ghost">Coba Lagi</button>
+      <button id="miniExit" class="btn btn-ghost">Tutup</button>
+    </div>
+  </div>
+</div>
+
+<!-- Slide-right detail panel -->
+<aside id="sidePanel" class="sidepanel">
+  <div class="head">
+    <h2 id="panelTitle">Detail Perintah</h2>
+    <button id="panelClose" class="closebtn">Tutup</button>
+  </div>
+
+  <div class="content" id="panelContent">
+    <div class="empty-msg">Pilih perintah untuk melihat penjelasan lengkap di sini.</div>
+  </div>
+
+</aside>
+{% endblock %}
+
+{% block scripts %}
+<script>
+/* ——————————— DATA ——————————— */
+const COMMANDS = [
+  {cmd:'pwd', desc:'Menampilkan direktori kerja saat ini.', example:'$ pwd\n/home/user', tips:'Tahu lokasi kerja sekarang.', cat:'basic', explain:'pwd = print working directory — melihat direktori aktif'},
+  {cmd:'ls', desc:'Melihat daftar file dan folder.', example:'$ ls\nDocuments  Downloads  Pictures', tips:'Gunakan -lah untuk detail.', cat:'basic', explain:'ls menampilkan isi direktori.'},
+  {cmd:'cd', desc:'Berpindah direktori.', example:'$ cd Documents', tips:'cd .. untuk naik.', cat:'basic', explain:'cd = change directory.'},
+  {cmd:'mkdir', desc:'Membuat folder baru.', example:'$ mkdir tugas', tips:'Gunakan -p untuk membuat multi-folder.', cat:'filesystem', explain:'mkdir membuat direktori.'},
+  {cmd:'rmdir', desc:'Menghapus folder kosong.', example:'$ rmdir tugas', tips:'Folder harus kosong.', cat:'filesystem', explain:'rmdir menghapus direktori kosong.'},
+  {cmd:'touch', desc:'Membuat file kosong.', example:'$ touch catatan.txt', tips:'Sering untuk file dummy.', cat:'filesystem', explain:'touch membuat file baru.'},
+  {cmd:'cp', desc:'Menyalin file.', example:'$ cp file1.txt file2.txt', tips:'Gunakan -r untuk folder.', cat:'filesystem', explain:'cp menyalin file/folder.'},
+  {cmd:'mv', desc:'Memindahkan/mengganti nama file.', example:'$ mv lama.txt baru.txt', tips:'Juga bisa memindahkan folder.', cat:'filesystem', explain:'mv memindahkan/rename.'},
+  {cmd:'rm', desc:'Menghapus file.', example:'$ rm catatan.txt', tips:'Hati-hati rm -rf.', cat:'filesystem', explain:'rm menghapus file.'},
+  {cmd:'echo', desc:'Menampilkan teks.', example:'$ echo "Halo"', tips:'Bisa digunakan > untuk redirect.', cat:'basic', explain:'echo mencetak teks.'},
+  {cmd:'uname', desc:'Info kernel.', example:'$ uname -a', tips:'-r untuk versi kernel.', cat:'system', explain:'uname memberi info sistem.'},
+  {cmd:'ping', desc:'Tes koneksi.', example:'$ ping google.com', tips:'Ctrl+C untuk berhenti.', cat:'network', explain:'ping mengetes konektivitas.'},
+  {cmd:'ssh', desc:'Remote ke server.', example:'$ ssh user@192.168.1.5', tips:'Port 22 harus aktif.', cat:'network', explain:'ssh remote login.'},
+  {cmd:'tar', desc:'Mengarsipkan file.', example:'$ tar -cvf backup.tar folder/', tips:'Gunakan -z untuk gzip.', cat:'advanced', explain:'tar membuat/extract archive.'},
+];
+
+/* ——————————— DOM ——————————— */
+const grid = document.getElementById('cmdGrid');
+const searchInput = document.getElementById('searchInput');
+const searchBtn = document.getElementById('searchBtn');
+const filterBtns = document.querySelectorAll('.filter button');
+
+const overlay = document.getElementById('overlay');
+const miniCli = document.getElementById('miniCli');
+const miniBody = document.getElementById('miniBody');
+const miniClose = document.getElementById('miniClose');
+const miniExit = document.getElementById('miniExit');
+const miniRun = document.getElementById('miniRun');
+const miniStatus = document.getElementById('miniStatus');
+
+const sidePanel = document.getElementById('sidePanel');
+const panelContent = document.getElementById('panelContent');
+const panelClose = document.getElementById('panelClose');
+
+let currentCategory = 'all';
+let lastSelected = null;
+
+/* ——————————— RENDER GRID ——————————— */
+function escapeHtml(s){ return s.replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":"&#39;"}[c])); }
+
+function renderGrid(list){
+  grid.innerHTML = '';
+  if(list.length === 0){
+    grid.innerHTML = '<div class="empty-msg">Tidak ada perintah ditemukan.</div>';
+    return;
+  }
+  list.forEach(x=>{
+    const card = document.createElement('div');
+    card.className='card';
+    card.innerHTML = `
+      <h3>${escapeHtml(x.cmd)}</h3>
+      <p>${escapeHtml(x.desc)}</p>
+      <small>${escapeHtml(x.example.split('\n')[0])}</small>
+      <div class="actions">
+        <button class="btn btn-primary" data-cmd="${x.cmd}">Coba</button>
+        <button class="btn btn-ghost" data-detail="${x.cmd}">Detail</button>
+      </div>
+    `;
+    grid.appendChild(card);
+  });
+
+  grid.querySelectorAll('[data-cmd]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openMini(btn.dataset.cmd));
+  });
+
+  grid.querySelectorAll('[data-detail]').forEach(btn=>{
+    btn.addEventListener('click', ()=> openPanel(btn.dataset.detail));
+  });
+}
+
+/* ——————————— FILTER & SEARCH ——————————— */
+function applyFilter(){
+  const q = searchInput.value.toLowerCase();
+  renderGrid(
+    COMMANDS.filter(x=>
+      (currentCategory === 'all' || x.cat === currentCategory) &&
+      (x.cmd.includes(q) || x.desc.toLowerCase().includes(q))
+    )
+  );
+}
+
+filterBtns.forEach(b=>{
+  b.addEventListener('click', ()=>{
+    filterBtns.forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    currentCategory = b.dataset.cat;
+    applyFilter();
+  });
+});
+
+searchBtn.addEventListener('click', applyFilter);
+searchInput.addEventListener('keydown', e=>{
+  if(e.key === 'Enter') applyFilter();
+});
+
+/* ——————————— MINI TERMINAL ——————————— */
+function appendMini(text, cls='sys'){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'line '+cls;
+  text.split('\n').forEach(l=>{
+    const div = document.createElement('div');
+    div.textContent = l;
+    wrapper.appendChild(div);
+  });
+  miniBody.appendChild(wrapper);
+  miniBody.scrollTop = miniBody.scrollHeight;
+}
+
+function openMini(cmd){
+  const item = COMMANDS.find(x=>x.cmd===cmd);
+  if(!item) return;
+
+  lastSelected = item;
+  miniBody.innerHTML = '';
+  overlay.classList.add('show');
+  miniCli.classList.add('show');
+  appendMini('$ ' + item.cmd, 'user');
+  setTimeout(()=> appendMini(item.example, 'sys'), 200);
+  setTimeout(()=> appendMini(item.explain, 'sys'), 350);
+  miniStatus.textContent = 'simulasi selesai';
+}
+
+function closeMini(){
+  overlay.classList.remove('show');
+  miniCli.classList.remove('show');
+}
+
+miniClose.addEventListener('click', closeMini);
+miniExit.addEventListener('click', closeMini);
+overlay.addEventListener('click', e=>{ if(e.target === overlay) closeMini(); });
+
+miniRun.addEventListener('click', ()=>{
+  if(!lastSelected) return;
+  miniBody.innerHTML = '';
+  appendMini('$ ' + lastSelected.cmd, 'user');
+  setTimeout(()=> appendMini(lastSelected.example, 'sys'), 200);
+  setTimeout(()=> appendMini(lastSelected.explain, 'sys'), 350);
+});
+
+/* ——————————— DETAIL PANEL ——————————— */
+function openPanel(cmd){
+  const item = COMMANDS.find(x=>x.cmd===cmd);
+  if(!item) return;
+
+  lastSelected = item;
+
+  panelContent.innerHTML = `
+    <h3 style="color:var(--accent);margin:0;font-size:1.1rem">${escapeHtml(item.cmd)}</h3>
+    <div class="meta">${escapeHtml(item.desc)}</div>
+    <div class="example"><pre>${escapeHtml(item.example)}</pre></div>
+    <div style="margin-top:10px;line-height:1.4">${escapeHtml(item.explain)}</div>
+    <div style="margin-top:8px;color:var(--muted)"><strong>Tips:</strong> ${escapeHtml(item.tips)}</div>
+  `;
+
+  sidePanel.classList.add('open');
+}
+
+function closePanel(){
+  sidePanel.classList.remove('open');
+}
+
+panelClose.addEventListener('click', closePanel);
+
+document.addEventListener('click', e=>{
+  if(sidePanel.classList.contains('open')){
+    if(!sidePanel.contains(e.target) && !e.target.closest('[data-detail]')){
+      closePanel();
+    }
+  }
+});
+
+/* ESC to close */
+document.addEventListener('keydown', e=>{
+  if(e.key === 'Escape'){
+    if(miniCli.classList.contains('show')) closeMini();
+    if(sidePanel.classList.contains('open')) closePanel();
+  }
+});
+
+/* INIT */
+renderGrid(COMMANDS);
+</script>
+{% endblock %}

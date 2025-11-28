@@ -1,0 +1,767 @@
+{% extends 'pembelajaran/base.html' %}
+{% load static %}
+{% block title %}Distribusi Linux & Fokus Ubuntu — LinuxEdu{% endblock %}
+
+{% block head_extra %}
+<link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+<style>
+  body {
+    background: linear-gradient(180deg, #fffefc 0%, #faf8f5 60%, #ffffff 100%);
+    font-family: 'Inter', 'Poppins', sans-serif;
+    color: #333;
+    transition: background 0.3s ease;
+  }
+
+  .accent-heading {
+    text-align: center;
+    font-size: 2.1rem;
+    color: #e95420;
+    font-weight: 400;
+    letter-spacing: 0.4px;
+    margin-bottom: 0.6rem;
+    cursor: pointer;
+    transition: all 0.5s ease;
+    opacity: 0;
+    transform: translateY(-20px);
+  }
+
+  #quiz-question {
+    text-align: center;
+  }
+
+  .accent-heading.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  .accent-heading:hover {
+    transform: scale(1.03);
+    text-shadow: 0 3px 10px rgba(233, 84, 32, 0.3);
+  }
+        .distro-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr); /* Selalu 2 kolom */
+    gap: 1.6rem;
+    margin-top: 2rem;
+    padding: 0 1rem;
+    justify-items: center;
+    }
+
+    .distro-card {
+    width: 100%;
+    max-width: 500px;
+    background: #ffffff;
+    border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+    padding: 22px 24px;
+    border-left: 5px solid #e95420;
+    position: relative;
+    overflow: hidden;
+    transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+    transform-style: preserve-3d;
+    opacity: 0;
+    transform: translateY(40px);
+    }
+
+    .distro-card::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(120deg, rgba(233,84,32,0.08), rgba(233,84,32,0));
+    transition: all 0.5s ease;
+    }
+
+    .distro-card:hover::before {
+    left: 100%;
+    }
+
+    .distro-card:hover {
+    transform: translateY(-6px) scale(1.02);
+    background: #fffaf6;
+    box-shadow: 0 10px 24px rgba(233,84,32,0.15);
+    }
+
+    .distro-card h3 {
+    color: #e95420;
+    font-weight: 700;
+    font-size: 1.2rem;
+    margin-bottom: 0.4rem;
+    transition: color 0.3s ease;
+    }
+
+    .distro-card:hover h3 {
+    color: #ff7438;
+    }
+
+    .distro-card p {
+    color: #3f3f3f;
+    font-size: 0.95rem;
+    line-height: 1.55;
+    }
+
+    /* Responsif di HP — jadi 1 kolom aja */
+    @media (max-width: 768px) {
+    .distro-grid {
+        grid-template-columns: 1fr;
+    }
+    }
+
+    /* Animasi fade-up */
+    @keyframes fadeUp {
+    from {
+        opacity: 0;
+        transform: translateY(40px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+    }
+
+    .distro-card.visible {
+    animation: fadeUp 0.7s ease-out forwards;
+    }
+
+  .ubuntu-focus {
+    background: #fff8f3;
+    border-radius: 14px;
+    border-left: 6px solid #e95420;
+    padding: 1.5rem 1.8rem;
+    margin: 2rem 0;
+    box-shadow: 0 4px 10px rgba(233,84,32,0.08);
+    transition: all 0.3s ease;
+  }
+
+  .ubuntu-focus:hover {
+    transform: scale(1.01);
+    box-shadow: 0 6px 14px rgba(233,84,32,0.12);
+  }
+
+  .ubuntu-focus h2 {
+    font-weight: 700;
+    color: #e95420;
+  }
+
+  .gnu-tools {
+    background: #f9f9f9;
+    border-left: 5px solid #e95420;
+    border-radius: 14px;
+    padding: 1.4rem 1.6rem;
+    margin-top: 2rem;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+    transition: all 0.3s ease;
+  }
+
+  .gnu-tools:hover {
+    background: #fffaf6;
+    box-shadow: 0 6px 14px rgba(233,84,32,0.1);
+    transform: translateY(-4px);
+  }
+
+  .gnu-tools h2 {
+    color: #e95420;
+    font-weight: 700;
+    margin-bottom: 0.8rem;
+  }
+
+  .gnu-tools ul {
+    list-style: disc;
+    padding-left: 1.4rem;
+  }
+
+  .gnu-tools ul li {
+    margin-bottom: 0.3rem;
+    color: #333;
+  }
+
+  pre code {
+    background: #f8f8f8;
+    border-radius: 8px;
+    display: block;
+    padding: 10px;
+    overflow-x: auto;
+    font-size: 0.95rem;
+  }
+
+  .fade-in {
+    opacity: 0;
+    transform: translateY(30px);
+    transition: opacity 0.8s ease, transform 0.8s ease;
+  }
+
+  .fade-in.visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+    .center-cards {
+    margin-left: auto;
+    margin-right: auto;
+    }
+
+</style>
+
+{% endblock %}
+
+{% block content %}
+<h1 class="accent-heading" id="main-heading">Distribusi Linux & Fokus Utama: Ubuntu</h1>
+<p id="secret-msg" style="text-align:center; opacity:0; transition:all 0.5s ease; color:#555;"></p>
+
+<div class="container">
+
+  <div class="distro-grid">
+    <div class="distro-card" data-aos="fade-up">
+      <h3>Ubuntu</h3>
+      <p><strong>Filosofi:</strong> “I am because we are.” — Filosofi Ubuntu tentang kebersamaan.</p>
+      <p><strong>Dibuat oleh:</strong> Canonical Ltd (2004). Turunan dari Debian, berfokus pada kemudahan & dukungan jangka panjang.</p>
+      <p><strong>Desktop:</strong> GNOME.</p>
+      <pre><code class="language-bash">sudo apt update && sudo apt upgrade</code></pre>
+      <p><em>Fakta:</em> Nama rilis Ubuntu selalu hewan + sifat, misal “Jammy Jellyfish”.</p>
+    </div>
+
+    <div class="distro-card" data-aos="fade-up" data-aos-delay="100">
+      <h3>Debian</h3>
+      <p><strong>Diluncurkan:</strong> 1993 — fondasi banyak distro termasuk Ubuntu.</p>
+      <p><strong>Filosofi:</strong> Kebebasan software dan stabilitas tinggi.</p>
+      <pre><code class="language-bash">sudo apt-get update
+cat /etc/debian_version</code></pre>
+      <p><em>Fakta:</em> Nama “Debian” dari “Debra” dan “Ian” — pasangan pendirinya</p>
+    </div>
+
+    <div class="distro-card" data-aos="fade-up" data-aos-delay="200">
+      <h3>Fedora</h3>
+      <p><strong>Dibuat oleh:</strong> Red Hat (2003). Playground fitur baru sebelum ke RHEL.</p>
+      <p><strong>Desktop:</strong> GNOME terbaru, cepat adopsi teknologi baru.</p>
+      <pre><code class="language-bash">sudo dnf update
+sudo dnf install neofetch</code></pre>
+      <p><em>Fakta:</em> “Fedora loves freedom, friends, features, and first.”</p>
+    </div>
+
+    <div class="distro-card" data-aos="fade-up" data-aos-delay="300">
+      <h3>Arch Linux</h3>
+      <p><strong>Motto:</strong> Keep It Simple, Stupid (KISS).</p>
+      <p><strong>Ciri khas:</strong> Rolling release, pengguna membangun sistem dari nol.</p>
+      <pre><code class="language-bash">sudo pacman -Syu
+neofetch</code></pre>
+      <p><em>Fakta:</em> Pengguna Arch sering bilang: “btw, I use Arch”</p>
+    </div>
+
+    <div class="distro-card" data-aos="fade-up" data-aos-delay="400">
+      <h3>openSUSE</h3>
+      <p><strong>Dibuat oleh:</strong> Komunitas Jerman, didukung SUSE Linux GmbH.</p>
+      <p><strong>Versi:</strong> Leap (stabil) & Tumbleweed (rolling).</p>
+      <pre><code class="language-bash">sudo zypper refresh
+sudo zypper update</code></pre>
+      <p><em>Fakta:</em> YaST (Yet another Setup Tool) adalah tool admin GUI legendaris!</p>
+    </div>
+
+    <div class="distro-card" data-aos="fade-up" data-aos-delay="500">
+      <h3>Linux Mint</h3>
+      <p><strong>Tujuan:</strong> Pengalaman desktop halus & ramah pengguna.</p>
+      <p><strong>Berbasis:</strong> Ubuntu, DE utama: Cinnamon, MATE, XFCE.</p>
+      <pre><code class="language-bash">sudo apt install mintupdate</code></pre>
+      <p><em>Fakta:</em> Logo daun melambangkan kesegaran — Ubuntu versi manis</p>
+    </div>
+
+    <div class="distro-card center-cards" data-aos="fade-up" data-aos-delay="600">
+      <h3>Manjaro</h3>
+      <p><strong>Turunan:</strong> Arch Linux dengan tampilan lebih ramah.</p>
+      <p><strong>Kelebihan:</strong> Update cepat tanpa ribet setup manual.</p>
+      <pre><code class="language-bash">sudo pacman -Syu
+mhwd-kernel -li</code></pre>
+      <p><em>Fakta:</em> Dirilis tahun 2011 dan cepat populer di kalangan gamer Linux</p>
+    </div>
+
+    <div class="distro-card center-cards" data-aos="fade-up" data-aos-delay="700">
+      <h3>Pop!_OS</h3>
+      <p><strong>Dibuat oleh:</strong> System76, fokus pada produktivitas dan hardware modern.</p>
+      <p><strong>Desktop:</strong> COSMIC berbasis GNOME, desain clean & efisien.</p>
+      <pre><code class="language-bash">sudo apt install pop-desktop
+gnome-control-center</code></pre>
+      <p><em>Fakta:</em> Salah satu distro favorit pengguna laptop dan kreator konten</p>
+    </div>
+  </div>
+
+ <section id="linux-quiz" data-aos="fade-up" style="margin:2rem 0;">
+  <h2 style="color: #e95420; text-align:center; font-weight:700; font-size:1.3rem; margin-bottom:1rem;">
+    Kuis: <br>
+    Distro Linux Mana yang Cocok untuk Kamu?
+  </h2>
+
+  <div id="quiz-container" style="max-width:1200px; margin:0 auto;background:#fff;
+  border-radius:14px;box-shadow:0 4px 14px rgba(0,0,0,0.08);
+  padding:1.8rem;transition:all .5s ease;">
+    <div id="quiz-question" style="font-weight:600;font-size:1.15rem;color:#333;margin-bottom:1.2rem;
+    transition:opacity .4s ease, transform .4s ease;"></div>
+    <div id="quiz-options" style="display:flex;flex-direction:column;gap:.8rem;"></div>
+  </div>
+
+  <div id="quiz-result" style="text-align:center;margin-top:2rem;display:none;
+  opacity:0;transform:translateY(20px);transition:all .6s ease;">
+    <h3 id="result-title" style="color:#e95420;font-weight:700;font-size:1.5rem;margin-bottom:.4rem;"></h3>
+    <p id="result-desc" style="color:#333;font-size:1rem;"></p>
+    <button id="retry-btn" style="margin-top:1.3rem;padding:10px 20px;border:none;
+    background:#e95420;color:#fff;border-radius:8px;cursor:pointer;font-weight:600;
+    transition:all .3s ease;">Coba Lagi</button>
+  </div>
+
+</section>
+
+    <script>
+    const quizData = [
+    { q:"Kamu tipe orang seperti apa di keseharianmu?", options:[
+        {text:"Tenang, teratur, suka kestabilan.", distro:"Debian"},
+        {text:"Kreatif dan suka hal baru.", distro:"Pop!_OS"},
+        {text:"Eksperimen dan penasaran sama sistem.", distro:"Arch Linux"},
+        {text:"Santai tapi efisien.", distro:"Linux Mint"}
+    ]},
+    { q:"Kalau menghadapi masalah teknis, kamu biasanya…", options:[
+        {text:"Cari solusi pelan-pelan di forum.", distro:"Debian"},
+        {text:"Langsung coba perintah di terminal!", distro:"Arch Linux"},
+        {text:"Restart dulu, baru mikir.", distro:"Ubuntu"},
+        {text:"Tunggu update datang sendiri.", distro:"Manjaro"}
+    ]},
+    { q:"Kamu lebih suka tampilan seperti apa?", options:[
+        {text:"Clean dan profesional.", distro:"Pop!_OS"},
+        {text:"Klasik, simple, familiar.", distro:"Linux Mint"},
+        {text:"Modern dan interaktif.", distro:"Ubuntu"},
+        {text:"Minimalis dan fokus performa.", distro:"Arch Linux"}
+    ]},
+    { q:"Cara kamu belajar sesuatu yang baru itu…", options:[
+        {text:"Baca dokumentasi resmi dulu.", distro:"Debian"},
+        {text:"Langsung praktek sampai bisa.", distro:"Manjaro"},
+        {text:"Eksperimen terus sampai paham.", distro:"Arch Linux"},
+        {text:"Lihat tutorial di YouTube biar cepat.", distro:"Ubuntu"}
+    ]},
+    { q:"Kalau temanmu minta rekomendasi OS, kamu akan…", options:[
+        {text:"Kasih yang mudah dan familiar.", distro:"Ubuntu"},
+        {text:"Kasih yang ringan tapi cantik.", distro:"Linux Mint"},
+        {text:"Kasih yang powerful, biar mereka belajar banyak.", distro:"Arch Linux"},
+        {text:"Kasih yang fresh dan modern.", distro:"Pop!_OS"}
+    ]}
+    ];
+
+    let current = 0;
+    let scores = {};
+    const qBox = document.getElementById("quiz-question");
+    const optBox = document.getElementById("quiz-options");
+    const resultBox = document.getElementById("quiz-result");
+    const resultTitle = document.getElementById("result-title");
+    const resultDesc = document.getElementById("result-desc");
+    const retryBtn = document.getElementById("retry-btn");
+
+    document.body.style.fontFamily = "'Poppins', sans-serif";
+
+    function showQuestion() {
+    const q = quizData[current];
+    qBox.style.opacity = 0;
+    qBox.style.transform = "translateY(-10px)";
+    setTimeout(() => {
+        qBox.textContent = q.q;
+        qBox.style.opacity = 1;
+        qBox.style.transform = "translateY(0)";
+    }, 200);
+    optBox.innerHTML = "";
+    q.options.forEach(opt => {
+        const btn = document.createElement("button");
+        btn.textContent = opt.text;
+        Object.assign(btn.style, {
+        padding:"12px 16px",
+        border:"2px solid #e95420",
+        borderRadius:"10px",
+        background:"#fff",
+        cursor:"pointer",
+        fontWeight:"500",
+        color:"#333",
+        transition:"all .25s ease",
+        fontFamily:"'Poppins', sans-serif",
+        boxShadow:"0 3px 8px rgba(0,0,0,0.05)",
+        margin:"8px 0",
+        width:"100%",
+        textAlign:"left"
+        });
+        btn.onmouseenter = ()=>{ 
+        btn.style.background="#fff5ef"; 
+        btn.style.transform="translateY(-2px)";
+        btn.style.boxShadow="0 6px 14px rgba(233,84,32,0.15)";
+        };
+        btn.onmouseleave = ()=>{ 
+        btn.style.background="#fff"; 
+        btn.style.transform="translateY(0)";
+        btn.style.boxShadow="0 3px 8px rgba(0,0,0,0.05)";
+        };
+        btn.onclick = ()=>selectOption(opt.distro);
+        optBox.appendChild(btn);
+    });
+    }
+
+    function selectOption(distro) {
+    scores[distro]=(scores[distro]||0)+1;
+    current++;
+    if(current<quizData.length){
+        qBox.style.opacity=0;
+        optBox.style.opacity=0;
+        setTimeout(()=>{showQuestion(); qBox.style.opacity=1; optBox.style.opacity=1;},400);
+    } else showResult();
+    }
+
+    function showResult() {
+    document.getElementById("quiz-container").style.opacity="0";
+    setTimeout(()=>{
+        document.getElementById("quiz-container").style.display="none";
+        resultBox.style.display="block";
+        setTimeout(()=>{resultBox.style.opacity=1; resultBox.style.transform="translateY(0)";},100);
+    },400);
+
+    const best=Object.keys(scores).reduce((a,b)=>scores[a]>scores[b]?a:b);
+    const desc = {
+    "Ubuntu": "Kamu praktis dan seimbang — kerja lancar, tampilan oke.",
+    "Debian": "Kamu tenang, stabil, dan nggak suka hal ribet.",
+    "Arch Linux": "Kamu petualang sejati, suka ngulik sampai tuntas.",
+    "Linux Mint": "Kamu simpel, rapi, dan tahu cara nyamanin diri.",
+    "Pop!_OS": "Kamu modern, kreatif, dan efisien banget.",
+    "Manjaro": "Kamu fleksibel, cepat adaptasi, dan selalu update."
+    };
+    resultTitle.textContent=best;
+    resultDesc.textContent=desc[best]||"Kamu punya kepribadian unik — semua distro bisa cocok kalau kamu nyaman menggunakannya.";
+
+    retryBtn.style.background = "#e95420";
+    retryBtn.style.color = "#fff";
+    retryBtn.style.borderRadius = "10px";
+    retryBtn.style.fontFamily = "'Poppins', sans-serif";
+    retryBtn.style.padding = "10px 24px";
+    retryBtn.style.transition = "all .3s ease";
+    retryBtn.style.boxShadow = "0 4px 12px rgba(233,84,32,0.25)";
+    retryBtn.style.fontWeight = "600";
+    retryBtn.style.border = "none";
+    
+    retryBtn.onmouseenter = ()=> {
+        retryBtn.style.background = "#f86e3c";
+        retryBtn.style.transform = "translateY(-3px)";
+        retryBtn.style.boxShadow = "0 8px 18px rgba(233,84,32,0.3)";
+    };
+    retryBtn.onmouseleave = ()=> {
+        retryBtn.style.background = "#e95420";
+        retryBtn.style.transform = "translateY(0)";
+        retryBtn.style.boxShadow = "0 4px 12px rgba(233,84,32,0.25)";
+    };
+    }
+
+    retryBtn.onclick = ()=>{ current=0; scores={};
+    resultBox.style.display="none";
+    document.getElementById("quiz-container").style.display="block";
+    document.getElementById("quiz-container").style.opacity="1";
+    showQuestion();
+    };
+
+    showQuestion();
+    </script>
+
+  <section class="ubuntu-focus" data-aos="fade-up">
+    <h2>Fokus: Ubuntu</h2>
+    <p>Ubuntu adalah distro paling populer untuk desktop Linux. Dirancang agar mudah digunakan dan memiliki dukungan jangka panjang.</p>
+    <ul>
+      <li>Model rilis: reguler (6 bulan) dan LTS (2 tahun).</li>
+      <li>Ubuntu 24.04 LTS (Noble Numbat) didukung hingga 2029.</li>
+      <li>Flavors: Kubuntu, Xubuntu, Lubuntu, Ubuntu MATE, Budgie, Kylin, Studio, dan lainnya.</li>
+    </ul>
+  </section>
+
+  <section data-aos="fade-up">
+    <h2>APT & Paket Manajemen di Ubuntu</h2>
+    <p>APT adalah manajer paket utama di Ubuntu, didukung backend <code>dpkg</code>. Gunakan perintah berikut:</p>
+    <pre><code class="language-bash">sudo apt update && sudo apt upgrade
+sudo apt install package-name
+sudo apt autoremove</code></pre>
+    <p>Selain APT, Ubuntu juga mendukung <strong>Snap</strong> dan <strong>Flatpak</strong> untuk aplikasi modern yang terisolasi.</p>
+  </section>
+
+  <section class="gnu-tools" data-aos="fade-up">
+    <h2>GNU Tools Umum di Semua Distro</h2>
+    <ul>
+      <li><code>grep</code> — mencari teks dalam file.</li>
+      <li><code>sed</code> — manipulasi teks otomatis.</li>
+      <li><code>awk</code> — analisis data baris demi baris.</li>
+      <li><code>lsblk</code> — melihat disk & partisi.</li>
+      <li><code>top</code> / <code>htop</code> — monitoring sistem.</li>
+      <li><code>uname -a</code> — melihat kernel & arsitektur.</li>
+      <li><code>tar</code> — mengarsipkan dan mengekstrak file.</li>
+      <li><code>chmod</code> & <code>chown</code> — mengatur izin file.</li>
+    </ul>
+  </section>
+
+    <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" rel="stylesheet">
+    <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+
+    <section id="install-linux" data-aos="fade-up" style="margin-top:3rem;">
+    <h2 class="animate__animated animate__fadeInDown"
+        style="color:#e95420; font-weight:700; text-align:center; margin-bottom:1.5rem;">
+        Panduan Lengkap Menginstall Linux
+    </h2>
+
+    <div class="install-container">
+        <p class="intro-text" data-aos="fade-up" data-aos-delay="100">
+        Terdapat berbagai metode untuk menginstal Linux di perangkatmu. <br> Pilih pendekatan yang paling sesuai dengan kebutuhan dan tingkat kenyamananmu.
+        </p>
+
+        <div class="install-step" data-aos="fade-right" data-aos-delay="150">
+        <h3>1. Dual Boot (Windows + Linux)</h3>
+        <ul>
+            <li>Unduh file ISO distro Linux pilihanmu dari situs resminya (misalnya Ubuntu, Mint, Fedora).</li>
+            <li>Buat USB bootable menggunakan <code>Rufus</code> atau <code>balenaEtcher</code>.</li>
+            <li>Masuk ke BIOS dan atur urutan boot agar USB berada di posisi pertama.</li>
+            <li>Jalankan instalasi Linux dan pilih opsi <em>Install alongside Windows</em> untuk membuat dual boot.</li>
+        </ul>
+        </div>
+
+        <div class="install-step" data-aos="fade-left" data-aos-delay="250">
+        <h3>2. Virtual Machine</h3>
+        <ul>
+            <li>Install software virtualisasi seperti <strong>VirtualBox</strong> atau <strong>VMware</strong>.</li>
+            <li>Buat mesin virtual baru, pilih file ISO Linux sebagai sumber boot.</li>
+            <li>Jalankan mesin virtual dan eksplor Linux tanpa mengubah sistem utama.</li>
+        </ul>
+        <p class="note">Cocok untuk latihan, pengujian, dan belajar tanpa risiko.</p>
+        </div>
+
+        <div class="install-step" data-aos="fade-right" data-aos-delay="350">
+        <h3>3. WSL (Windows Subsystem for Linux)</h3>
+        <ul>
+            <li>Buka PowerShell (Run as Administrator), lalu jalankan:</li>
+        </ul>
+        <pre><code class="language-bash">wsl --install</code></pre>
+        <ul>
+            <li>Pilih distro seperti <strong>Ubuntu</strong> dari Microsoft Store.</li>
+            <li>Buka melalui Terminal Windows untuk pengalaman Linux langsung di Windows.</li>
+        </ul>
+        </div>
+
+        <div class="install-step" data-aos="fade-left" data-aos-delay="450">
+        <h3>4. Live USB</h3>
+        <ul>
+            <li>Boot dari USB berisi Linux tanpa melakukan instalasi permanen.</li>
+            <li>Berguna untuk troubleshooting atau mencoba Linux sebelum instalasi penuh.</li>
+        </ul>
+        <p class="note">Perubahan tidak akan tersimpan setelah restart.</p>
+        </div>
+
+        <div class="install-footer" data-aos="fade-up" data-aos-delay="600">
+        <p><strong>Tips:</strong> Pastikan semua data penting telah dicadangkan sebelum memodifikasi partisi atau sistem operasi.</p>
+        <button onclick="window.scrollTo({top:0, behavior:'smooth'});">Kembali ke Atas</button>
+        </div>
+    </div>
+    </section>
+
+    <script>
+    AOS.init({
+    duration: 900,
+    once: true
+    });
+    </script>
+
+    <style>
+    .install-container {
+    background: #fff;
+    border-radius: 16px;
+    padding: 2.2rem;
+    box-shadow: 0 8px 22px rgba(0, 0, 0, 0.05);
+    max-width: 1200px;
+    margin: auto;
+    font-family: 'Inter', sans-serif;
+    transition: box-shadow 0.4s ease;
+    }
+
+    .install-container:hover {
+    box-shadow: 0 10px 28px rgba(0, 0, 0, 0.07);
+    }
+
+    .intro-text {
+    text-align: center;
+    color: #555;
+    margin-bottom: 2rem;
+    font-size: 1.05rem;
+    line-height: 1.6;
+    }
+
+    .install-step {
+    margin-top: 2rem;
+    background: linear-gradient(145deg, #ffffff, #f8f8f8);
+    transition: transform 0.35s ease, box-shadow 0.35s ease, background 0.35s ease;
+    padding: 1.4rem 1.6rem;
+    border-radius: 12px;
+    border: 1px solid #f2f2f2;
+    position: relative;
+    overflow: hidden;
+    }
+
+    .install-step::before {
+    content: "";
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: linear-gradient(120deg, rgba(233,84,32,0.08), transparent);
+    opacity: 0;
+    transition: opacity 0.4s ease;
+    }
+
+    .install-step:hover::before {
+    opacity: 1;
+    }
+
+    .install-step:hover {
+    transform: translateY(-6px) scale(1.02);
+    box-shadow: 0 10px 25px rgba(233, 84, 32, 0.12);
+    background: #fffaf6;
+    }
+
+    .install-step h3 {
+    color: #e95420;
+    font-weight: 700;
+    transition: color 0.3s ease;
+    margin-bottom: 0.7rem;
+    font-size: 1.25rem;
+    }
+
+    .install-step h3:hover {
+    color: #ff7b42;
+    }
+
+    .install-step ul {
+    line-height: 1.8;
+    color: #333;
+    margin-bottom: 0.6rem;
+    padding-left: 1.3rem;
+    }
+
+    .install-step ul li {
+    transition: transform 0.2s ease;
+    }
+
+    .install-step ul li:hover {
+    transform: translateX(5px);
+    color: #e95420;
+    }
+
+    .install-step .note {
+    color: #666;
+    font-size: 0.95rem;
+    font-style: italic;
+    margin-top: 0.3rem;
+    }
+
+    pre {
+    background: #f9f9f9;
+    padding: 1rem;
+    border-radius: 10px;
+    overflow-x: auto;
+    font-size: 0.95rem;
+    border: 1px solid #eee;
+    transition: box-shadow 0.3s ease;
+    }
+
+    pre:hover {
+    box-shadow: 0 0 10px rgba(233, 84, 32, 0.15);
+    }
+
+    .install-footer {
+    text-align: center;
+    margin-top: 2.5rem;
+    color: #444;
+    font-weight: 500;
+    }
+
+    .install-footer button {
+    margin-top: 1.2rem;
+    background: linear-gradient(135deg, #e95420, #f26b38);
+    color: #fff;
+    border: none;
+    padding: 0.8rem 1.6rem;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    letter-spacing: 0.3px;
+    transition: all 0.35s ease;
+    box-shadow: 0 6px 16px rgba(233, 84, 32, 0.25);
+    }
+
+    .install-footer button:hover {
+    background: linear-gradient(135deg, #ff7b42, #ff9e70);
+    transform: translateY(-3px) scale(1.06);
+    box-shadow: 0 10px 24px rgba(233, 84, 32, 0.35);
+    }
+
+    .install-footer button:active {
+    transform: scale(0.98);
+    }
+    </style>
+
+  <section data-aos="fade-up">
+    <br>
+    <h2>Filosofi Ubuntu</h2>
+    <p>“Ubuntu” berarti <em>kemanusiaan untuk sesama</em>. Filosofi ini mencerminkan semangat kebersamaan dan kontribusi komunitas yang terbuka bagi semua.</p>
+  </section>
+
+</div>
+
+{% endblock %}
+
+{% block scripts %}
+<script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
+<script>
+AOS.init({
+  duration: 900,
+  easing: 'ease-out-quart',
+  once: false
+});
+
+const heading = document.getElementById('main-heading');
+const msg = document.getElementById('secret-msg');
+const easter = [
+  "Fun fact: Ubuntu pertama kali rilis tahun 2004 dengan nama *Warty Warthog*!",
+  "'Ubuntu' berasal dari bahasa Afrika Selatan, artinya: *Aku ada karena kita ada.*",
+  "LTS Ubuntu punya dukungan 5 tahun stabil, cocok buat server & developer.",
+  "Canonical membuat Ubuntu agar Linux bisa diakses semua orang, bukan cuma teknisi.",
+  "Ubuntu Software Center dibuat untuk menyaingi App Store tapi open-source!",
+  "Nama rilis Ubuntu selalu gabungan sifat & hewan, misal *Jammy Jellyfish*.",
+  "Ubuntu menjadi basis untuk distro populer seperti Linux Mint dan Pop!_OS.",
+  "Ubuntu Server digunakan di ribuan cloud dan data center di seluruh dunia.",
+  "Perintah favorit pengguna Ubuntu: `sudo apt update && sudo apt upgrade.",
+  "Komunitas Ubuntu global aktif di 60+ negara, semua relawan tanpa pamrih.",
+  "Mark Shuttleworth (pendiri Canonical) dulu pernah pergi ke luar angkasa!"
+];
+
+heading.addEventListener('click', () => {
+  const random = easter[Math.floor(Math.random() * easter.length)];
+  msg.textContent = random;
+  msg.style.opacity = 0;
+  msg.style.transform = "translateY(10px)";
+  msg.style.transition = "all 0.8s ease";
+  
+
+  msg.style.color = "#333";
+
+  setTimeout(() => {
+    msg.style.opacity = 1;
+    msg.style.transform = "translateY(0)";
+  }, 100);
+
+  setTimeout(() => {
+    msg.style.opacity = 0;
+    msg.style.transform = "translateY(-10px)";
+  }, 10000);
+});
+
+const observer = new IntersectionObserver(entries => {
+  entries.forEach(entry => {
+    if (entry.isIntersecting) heading.classList.add('visible');
+    else heading.classList.remove('visible');
+  });
+}, { threshold: 0.6 });
+
+observer.observe(heading);
+</script>
+{% endblock %}
+
